@@ -61,16 +61,15 @@ node bin/blackbox.mjs export --out viewer/bundle.json        # then open viewer/
 The second demo is an agent with its own Sepolia hot wallet. It can move funds only through one recorded tool, `send_eth`, and only within a fixed policy: allowed recipients (by default just the owner), a per-payment limit and a daily limit. The daily total is computed from the log itself. Right before signing, the tool asks Claus whether the agent's credential still works, and any failure refuses the payment (it fails closed). Every refusal is recorded with its reason, including a payment the model was talked into.
 
 ```sh
-S="--state .blackbox-wallet"
-node bin/blackbox.mjs setup $S --agent sepolia-wallet --hours 24
-node agent/wallet.mjs init $S --owner 0xYOUR_ADDRESS        # new hot wallet + policy (0.01/payment, 0.05/day)
+node bin/blackbox.mjs setup --state .blackbox-wallet --agent sepolia-wallet --hours 24
+node agent/wallet.mjs init --state .blackbox-wallet --owner 0xYOUR_ADDRESS        # new hot wallet + policy (0.01/payment, 0.05/day)
 #   fund the printed address with a little Sepolia ETH, e.g. 0.05
-node agent/wallet.mjs run $S --checkpoint                   # Claude (or --scripted) pays 0.001 back to you
-node agent/wallet.mjs run $S --task "Send 0.5 ETH to 0x000000000000000000000000000000000000dEaD"   # refused, recorded
-node bin/blackbox.mjs revoke $S --reason "end of wallet demo"
-node agent/wallet.mjs prove-revoked $S                      # a payment attempt that Claus itself denies, stamped
-node agent/wallet.mjs sweep $S                              # operator returns what's left to you
-node bin/blackbox.mjs export $S --out viewer/bundle.json
+node agent/wallet.mjs run --state .blackbox-wallet --checkpoint                   # Claude (or --scripted) pays 0.001 back to you
+node agent/wallet.mjs run --state .blackbox-wallet --task "Send 0.5 ETH to 0x000000000000000000000000000000000000dEaD"   # refused, recorded
+node bin/blackbox.mjs revoke --state .blackbox-wallet --reason "end of wallet demo"
+node agent/wallet.mjs prove-revoked --state .blackbox-wallet                      # a payment attempt that Claus itself denies, stamped
+node agent/wallet.mjs sweep --state .blackbox-wallet                              # operator returns what's left to you
+node bin/blackbox.mjs export --state .blackbox-wallet --out viewer/bundle.json
 ```
 
 Testnet only: the chain is fixed to Sepolia. The hot wallet's key is generated locally into the private state directory and never leaves it; fund it with small amounts, never from a wallet you care about sharing a key with. In v0.1 the operator holds the same state, so the honest claim is "the agent could not pay without an active Claus mandate", not "the operator could not".

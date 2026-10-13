@@ -110,6 +110,7 @@ async function grant(ctx, client, name, { projectId, principalId, scopes, expire
 /** Creates (or resumes) both projects, the notary service and the agent's mandate. */
 export async function setup(ctx, { agentName = 'demo-agent', mandateHours = 24, probeTimeoutMs = 180000, log = () => {} } = {}) {
   const s = ctx.state, tag = s.tag;
+  if (s.revokedAt) throw new Error('this state directory belongs to a revoked agent; use a new one, e.g. --state .blackbox-wallet');
   s.agentName ??= agentName;
 
   // --- Notary project and service -------------------------------------------
