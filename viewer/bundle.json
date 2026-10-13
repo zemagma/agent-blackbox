@@ -1,6 +1,6 @@
 {
   "format": "agent-blackbox/1",
-  "exportedAt": 1791932377951,
+  "exportedAt": 1791932813344,
   "agent": "gas-watcher",
   "origin": "https://claus-network-api.vercel.app",
   "claus": {
@@ -18,7 +18,7 @@
       "project.publish"
     ],
     "expiresAt": 1792018047861,
-    "revokedAt": null
+    "revokedAt": 1791932549723
   },
   "lines": [
     {
@@ -355,6 +355,45 @@
         "head": "0x07de064979643fd4daec2211439e8572a4c0230f33cc975cd04c57d2748f8455",
         "toSeq": 18
       }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 20,
+        "at": 1791932550391,
+        "type": "revocation",
+        "summary": "Mandate revoked by the operator: end of demo",
+        "payloadHash": "0x5a83b9e1811711ee4da66f4b0d2ad6a2260356b193a0ebe703ec0c64ea475dbb",
+        "prev": "0x8660b521e3e0f5ff8939383cbb6bd03cde05195050dacad7901fd93a8b447cf6"
+      },
+      "hash": "0xcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02",
+      "payload": {
+        "mandateId": "mnd_e6cc1ca7-8238-4d59-bbfc-1e896acd3568",
+        "revokedAt": 1791932549723,
+        "reason": "end of demo",
+        "agentCredentialNowReturns": "scope_denied"
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 21,
+        "at": 1791932557777,
+        "type": "checkpoint",
+        "summary": "Entries 19-20 stamped by the notary and published on Claus",
+        "payloadHash": "0xa19d7a48a4456f708827b633749096702c8c6f3d3cf424db0095f0ecc93b6528",
+        "prev": "0xcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02"
+      },
+      "hash": "0x9e2fb0349872d28d129beee9f55c5c3bf39e942f0ba4a383fb1d3287a5657d47",
+      "payload": {
+        "orderId": "sha256:d6c2aa40483e30058848a08817aafa62534ae471d69e4973c72890ca6a8b9cb5",
+        "url": "https://claus-network-api.vercel.app/v1/public/service-results/sha256%3Ad6c2aa40483e30058848a08817aafa62534ae471d69e4973c72890ca6a8b9cb5",
+        "root": "0x2ac1b4b97fb06b136c8bc670de88fcd080b3ead9b894f4a9d8735afdd7bd307d",
+        "head": "0xcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02",
+        "toSeq": 20
+      }
     }
   ],
   "checkpoints": [
@@ -522,6 +561,48 @@
           "root": "0x07faab94186963bb3d225b68e8a0bdb9465ad6839c9f2b035d92677930e15bd6",
           "to": 1791932326122,
           "toSeq": 18,
+          "v": 1
+        }
+      }
+    },
+    {
+      "orderId": "sha256:d6c2aa40483e30058848a08817aafa62534ae471d69e4973c72890ca6a8b9cb5",
+      "url": "https://claus-network-api.vercel.app/v1/public/service-results/sha256%3Ad6c2aa40483e30058848a08817aafa62534ae471d69e4973c72890ca6a8b9cb5",
+      "fromSeq": 19,
+      "toSeq": 20,
+      "root": "0x2ac1b4b97fb06b136c8bc670de88fcd080b3ead9b894f4a9d8735afdd7bd307d",
+      "head": "0xcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02",
+      "notarizedAt": 1791932553898,
+      "outputHash": "sha256:99b35b0656a97872f584a22c7d4e8e713e21d21f10e8530ec84b4e8d603e19e7",
+      "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b2000000000000000000000000000000000000000000000000000000000000001300000000000000000000000000000000000000000000000000000000000000142ac1b4b97fb06b136c8bc670de88fcd080b3ead9b894f4a9d8735afdd7bd307dcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02000000000000000000000000000000000000000000000000000000006aceb886",
+      "publicCopy": {
+        "id": "sha256:d6c2aa40483e30058848a08817aafa62534ae471d69e4973c72890ca6a8b9cb5",
+        "projectId": "prj_b552c47b-cdc2-401f-8e2b-fbd14a4f760d",
+        "providerProjectId": "prj_9a3ef782-6519-4962-be62-fa3b5321a269",
+        "serviceId": "sha256:5befda150e36991d96bbb7dc823efeffe466c4fb7054e2f85a918913423363f0",
+        "manifestHash": "sha256:46d1183a8410df730a29bc5084502a3a5ec940027878ce33ba1b2b2b9144cd9e",
+        "outputHash": "sha256:99b35b0656a97872f584a22c7d4e8e713e21d21f10e8530ec84b4e8d603e19e7",
+        "dataPolicy": "public-data-v1",
+        "dataPolicyHash": "sha256:e72720e19155ba6087ccc517decd2d5b504d5c474d7c7caa9b50e3fad490b980",
+        "sourceResults": [],
+        "depth": 1,
+        "revision": 1,
+        "deliveredAt": 1791932554810,
+        "publishedAt": 1791932557714,
+        "expiresAt": 1794437115207,
+        "output": {
+          "agent": "gas-watcher",
+          "capability": "blackbox.checkpoint.v1",
+          "count": 2,
+          "from": 1791932334172,
+          "fromSeq": 19,
+          "head": "0xcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02",
+          "notarizedAt": 1791932553898,
+          "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b2000000000000000000000000000000000000000000000000000000000000001300000000000000000000000000000000000000000000000000000000000000142ac1b4b97fb06b136c8bc670de88fcd080b3ead9b894f4a9d8735afdd7bd307dcfb4f41f0094c0da6fe1c8db1740cc6f3ab49d36ef5aef46973e21c680a21e02000000000000000000000000000000000000000000000000000000006aceb886",
+          "probe": false,
+          "root": "0x2ac1b4b97fb06b136c8bc670de88fcd080b3ead9b894f4a9d8735afdd7bd307d",
+          "to": 1791932550391,
+          "toSeq": 20,
           "v": 1
         }
       }
