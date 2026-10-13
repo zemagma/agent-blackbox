@@ -37,10 +37,21 @@ export async function openState(dir, { origin } = {}) {
   await save();
   // Each remote creation is recorded before and after, so an interrupted run
   // can resume without creating duplicates (Claus calls also carry idempotency keys).
-  async function step(key, action) {
+  // `secret: true` marks a step whose response cannot be fetched again (a new
+  // credential). It is recorded as pending first; if the response is lost, the
+  // step throws `pending_credential` instead of silently issuing a second one.
+  async function step(key, action, { secret = false } = {}) {
     const old = state.steps[key];
     if (old?.done) return old.value;
-    const value = await action();
+    if (old?.pending) throw Object.assign(new Error('credential response was lost: ' + key), { code: 'pending_credential' });
+    if (secret) { state.steps[key] = { pending: true }; await save(); }
+    let value;
+    try { value = await action(); }
+    catch (err) {
+      // A definite 4xx means nothing was issued, so the step may be tried again.
+      if (secret && err.status >= 400 && err.status < 500) { delete state.steps[key]; await save(); }
+      throw err;
+    }
     state.steps[key] = { done: true, value }; await save();
     return value;
   }
@@ -70,6 +81,32 @@ async function publishProfile(client, projectId, description) {
   } catch (err) { if (err.code !== 'revision_conflict') throw err; }
 }
 
+/**
+ * Mandate + one-time credential. Claus's documented recovery for a lost
+ * credential response: revoke that mandate and issue a fresh grant (the old
+ * secret can never be retrieved, and must not be duplicated silently).
+ */
+async function grant(ctx, client, name, { projectId, principalId, scopes, expiresAt }) {
+  const s = ctx.state;
+  s.grants ??= {};
+  for (;;) {
+    const attempt = s.grants[name] ?? 0;
+    const suffix = attempt ? '#' + attempt : '';
+    const mandate = await ctx.step(`${name}:mandate${suffix}`, () => client.call('mandate_create', {
+      projectId, principalId, scopes, expiresAt, idempotencyKey: `${s.tag}:${name}-mandate${suffix}` }));
+    try {
+      const credential = await ctx.step(`${name}:credential${suffix}`,
+        () => client.call('credential_create', { mandateId: mandate.id }), { secret: true });
+      return { mandate, credential };
+    } catch (err) {
+      if (err.code !== 'pending_credential') throw err;
+      try { await client.call('mandate_revoke', { mandateId: mandate.id }); }
+      catch (e) { if (![404, 409].includes(e.status)) throw e; }   // already revoked or gone
+      s.grants[name] = attempt + 1; await ctx.save();
+    }
+  }
+}
+
 /** Creates (or resumes) both projects, the notary service and the agent's mandate. */
 export async function setup(ctx, { agentName = 'demo-agent', mandateHours = 24, probeTimeoutMs = 180000, log = () => {} } = {}) {
   const s = ctx.state, tag = s.tag;
@@ -81,10 +118,8 @@ export async function setup(ctx, { agentName = 'demo-agent', mandateHours = 24, 
     name: 'Agent Blackbox Notary', slug: 'blackbox-notary-' + tag, idempotencyKey: tag + ':notary' }));
   const nAgent = await ctx.step('notary:agent', () => notaryOwner.client.call('agent_create', {
     projectId: nProject.id, name: 'Notary worker', idempotencyKey: tag + ':notary-agent' }));
-  const nMandate = await ctx.step('notary:mandate', () => notaryOwner.client.call('mandate_create', {
-    projectId: nProject.id, principalId: nAgent.id, scopes: NOTARY_SCOPES,
-    expiresAt: Date.now() + 29 * 86400000, idempotencyKey: tag + ':notary-mandate' }));
-  const nCredential = await ctx.step('notary:credential', () => notaryOwner.client.call('credential_create', { mandateId: nMandate.id }));
+  const { credential: nCredential } = await grant(ctx, notaryOwner.client, 'notary', {
+    projectId: nProject.id, principalId: nAgent.id, scopes: NOTARY_SCOPES, expiresAt: Date.now() + 29 * 86400000 });
   const notaryClient = createClaus({ origin: s.origin, token: nCredential.token });
   const service = await ctx.step('notary:service', () => notaryClient.call('service_register', {
     projectId: nProject.id, manifest: manifest({ recipient: notaryOwner.account.address }) }));
@@ -116,9 +151,8 @@ export async function setup(ctx, { agentName = 'demo-agent', mandateHours = 24, 
   const agent = await ctx.step('agent:agent', () => op.client.call('agent_create', {
     projectId: project.id, name: s.agentName, idempotencyKey: tag + ':agent' }));
   const expiresAt = Date.now() + mandateHours * 3600000;
-  const mandate = await ctx.step('agent:mandate', () => op.client.call('mandate_create', {
-    projectId: project.id, principalId: agent.id, scopes: AGENT_SCOPES, expiresAt, idempotencyKey: tag + ':agent-mandate' }));
-  const credential = await ctx.step('agent:credential', () => op.client.call('credential_create', { mandateId: mandate.id }));
+  const { mandate, credential } = await grant(ctx, op.client, 'agent', {
+    projectId: project.id, principalId: agent.id, scopes: AGENT_SCOPES, expiresAt });
   await publishProfile(op.client, project.id,
     `Agent Blackbox for "${s.agentName}": a public, tamper-evident record of what this AI agent was allowed to do and what it did.`);
   s.agent = { name: s.agentName, projectId: project.id, agentId: agent.id, mandateId: mandate.id,

@@ -63,11 +63,22 @@ export function createClaus({ origin = DEFAULT_ORIGIN, token, fetch: request = g
         body = JSON.stringify(rest);
       }
       // Mutations are never retried automatically, and credentials never follow redirects.
-      const res = await request(url, { method, headers, body, redirect: 'error', signal: AbortSignal.timeout(30000) });
-      let json;
-      try { json = await res.json(); } catch { throw new ClausError('invalid_api_response', res.status); }
-      if (!res.ok) throw new ClausError(json.error ?? 'request_failed', res.status, json);
-      return json;
+      // Reads that hit 429 wait for Retry-After (as the Claus docs ask) and try again.
+      for (let attempt = 0; ; attempt++) {
+        const res = await request(url, { method, headers, body, redirect: 'error', signal: AbortSignal.timeout(30000) });
+        if (res.status === 429) {
+          const wait = Math.min(Math.max(Number(res.headers.get('retry-after')) || 1, 1), 60) * 1000;
+          if (method === 'GET' && attempt < 3) { await new Promise((r) => setTimeout(r, wait)); continue; }
+          let details; try { details = await res.json(); } catch {}
+          const err = new ClausError(details?.error ?? 'rate_limited', 429, details);
+          err.retryAfterMs = wait;
+          throw err;
+        }
+        let json;
+        try { json = await res.json(); } catch { throw new ClausError('invalid_api_response', res.status); }
+        if (!res.ok) throw new ClausError(json.error ?? 'request_failed', res.status, json);
+        return json;
+      }
     },
   };
 }
