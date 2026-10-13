@@ -1,0 +1,26 @@
+{
+  "name": "agent-blackbox",
+  "version": "0.1.0",
+  "description": "A flight recorder for AI agents: scoped, revocable permissions and a tamper-evident public action log, built on Claus Network.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20.10" },
+  "bin": { "blackbox": "bin/blackbox.mjs" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:e2e": "node --test test/e2e/*.test.mjs",
+    "local-claus": "node dev/claus-local.mjs",
+    "demo": "node agent/demo.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.57.1"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.129.0"
+  },
+  "devDependencies": {
+    "solc": "0.8.27",
+    "@ethereumjs/evm": "^10.1.1",
+    "@ethereumjs/util": "^10.1.1"
+  }
+}

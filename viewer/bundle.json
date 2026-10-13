@@ -1,0 +1,398 @@
+{
+  "format": "agent-blackbox/1",
+  "exportedAt": 1791930713614,
+  "agent": "gas-watcher",
+  "origin": "http://127.0.0.1:44945",
+  "claus": {
+    "projectId": "prj_133cf3f9-332b-4fa9-a72d-79a05d121f09",
+    "mandateId": "mnd_154e60b4-1d68-4b4d-b0c1-5c1eac45e20e",
+    "notaryProjectId": "prj_ac65ba97-b669-4718-93d7-902eebd7b473",
+    "notaryServiceId": "sha256:6649b794cc29394e200586109a3c7aa519822caae9c55332f8647b16ee95e829"
+  },
+  "mandate": {
+    "scopes": [
+      "project.read",
+      "service.call",
+      "service.read",
+      "service.settle",
+      "project.publish"
+    ],
+    "expiresAt": 1792017113467,
+    "revokedAt": 1791930713542
+  },
+  "lines": [
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 0,
+        "at": 1791930713487,
+        "type": "genesis",
+        "summary": "Agent \"gas-watcher\" starts with a Claus mandate: project.read, service.call, service.read, service.settle, project.publish; expires 2026-10-14T22:31:53.467Z",
+        "payloadHash": "0xde44d3c90a31d81bab37f59ac3c4656d6075957d5d034c6191ce2da03a8d7cc5",
+        "prev": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "hash": "0x2d52394daf2f45bc3ec90e0becdfbe204f21124e000f91aa3cb288d4af429e88",
+      "payload": {
+        "claus": {
+          "origin": "http://127.0.0.1:44945",
+          "projectId": "prj_133cf3f9-332b-4fa9-a72d-79a05d121f09",
+          "agentId": "agent_0645cee5-d0c4-4da9-9bbf-fbaddee69695",
+          "mandateId": "mnd_154e60b4-1d68-4b4d-b0c1-5c1eac45e20e",
+          "scopes": [
+            "project.read",
+            "service.call",
+            "service.read",
+            "service.settle",
+            "project.publish"
+          ],
+          "expiresAt": 1792017113467
+        },
+        "operator": "0x2F5308A4FFCf43AB9f716632C864b37A81A907bf"
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 1,
+        "at": 1791930713488,
+        "type": "note",
+        "summary": "task (scripted): check gas and alert if it is cheap",
+        "payloadHash": "0x54ec1e866d65e7a1ea5331352f9baa1a13f453030e27933efc14baf0f82f7266",
+        "prev": "0x2d52394daf2f45bc3ec90e0becdfbe204f21124e000f91aa3cb288d4af429e88"
+      },
+      "hash": "0x2e9dd98da8bc1e00b24231c87c59ec6beeba0ce1d7880ff41adf5066885f42a1",
+      "payload": {
+        "task": "check gas",
+        "model": null
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 2,
+        "at": 1791930713490,
+        "type": "action",
+        "tool": "get_gas_price",
+        "summary": "gas price is 31.200 gwei",
+        "payloadHash": "0x047288fab3f34f0682183d54e2400f6b8218fb217685ae08dc7dff1dd2f682b7",
+        "prev": "0x2e9dd98da8bc1e00b24231c87c59ec6beeba0ce1d7880ff41adf5066885f42a1"
+      },
+      "hash": "0x0d25003b29b32c7a8be51c1dd875572969454d2e1bfd9c34cb4b6add4d6c1963"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 3,
+        "at": 1791930713491,
+        "type": "action",
+        "tool": "get_latest_block",
+        "summary": "block 21004311, base fee 31.200 gwei",
+        "payloadHash": "0xf2f62ad513e610a5fad36abee6989b9123e7693b9e4887b6843e622cc82f90ec",
+        "prev": "0x0d25003b29b32c7a8be51c1dd875572969454d2e1bfd9c34cb4b6add4d6c1963"
+      },
+      "hash": "0x46816e5ebb3d56b270784d5ae104d68f87fd86d99a07ffe2ac56c88a4de4d6f6"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 4,
+        "at": 1791930713491,
+        "type": "note",
+        "summary": "answer: Gas is 31.200 gwei; nothing to report.",
+        "payloadHash": "0xab7d8705d83c3c68f02e146cf98acc18435f8e85e86422abb44b00f5cf1f5c59",
+        "prev": "0x46816e5ebb3d56b270784d5ae104d68f87fd86d99a07ffe2ac56c88a4de4d6f6"
+      },
+      "hash": "0x1edce9fc4e005641cdb52cd228ff774c559a2cc1b0dd23f670a4b8728e0229b9",
+      "payload": {
+        "answer": "Gas is 31.200 gwei; nothing to report."
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 5,
+        "at": 1791930713492,
+        "type": "note",
+        "summary": "task (scripted): check gas and alert if it is cheap",
+        "payloadHash": "0x54ec1e866d65e7a1ea5331352f9baa1a13f453030e27933efc14baf0f82f7266",
+        "prev": "0x1edce9fc4e005641cdb52cd228ff774c559a2cc1b0dd23f670a4b8728e0229b9"
+      },
+      "hash": "0xed91892db963626dc12a2990eff50db3b910ef0c669caa7558b1965cfc89954b",
+      "payload": {
+        "task": "check gas",
+        "model": null
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 6,
+        "at": 1791930713492,
+        "type": "action",
+        "tool": "get_gas_price",
+        "summary": "gas price is 0.410 gwei",
+        "payloadHash": "0xf6ab334678b1886429a5ef966e3b0aa8ed5a804f810e09a0bb0324a30dcb135c",
+        "prev": "0xed91892db963626dc12a2990eff50db3b910ef0c669caa7558b1965cfc89954b"
+      },
+      "hash": "0x3b83788fb91acc8f7ca883b7008bcc1834f5d70275aef655cdccfaeda8e45cab"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 7,
+        "at": 1791930713493,
+        "type": "action",
+        "tool": "get_latest_block",
+        "summary": "block 21004612, base fee 0.410 gwei",
+        "payloadHash": "0x75990cc7bd6b3e3c76d9cdd6ff98ccb85035a3b9c8a81effd92763c5a97dfd0c",
+        "prev": "0x3b83788fb91acc8f7ca883b7008bcc1834f5d70275aef655cdccfaeda8e45cab"
+      },
+      "hash": "0xcd526770b5a761fbb0e981e3cb98cc43aff33e745d80cbed4bebd3a49ac42e73"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 8,
+        "at": 1791930713493,
+        "type": "action",
+        "tool": "post_alert",
+        "summary": "alert: Gas is 0.410 gwei at block 21004612: a cheap moment to deploy.",
+        "payloadHash": "0xc53bb5a8b06ea938945df25c0d73f858069b249cfdc20e555e6e997b4d96e26e",
+        "prev": "0xcd526770b5a761fbb0e981e3cb98cc43aff33e745d80cbed4bebd3a49ac42e73"
+      },
+      "hash": "0x3a830a7090fb3b54631d0c1edf029530161e5e6840208bd7c4d44116853bea04"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 9,
+        "at": 1791930713494,
+        "type": "note",
+        "summary": "answer: Gas is cheap (0.410 gwei); I posted an alert.",
+        "payloadHash": "0x47b07ad02f4b9d706460c66b71345557b368a0ca6bea6afdb184125843a15d27",
+        "prev": "0x3a830a7090fb3b54631d0c1edf029530161e5e6840208bd7c4d44116853bea04"
+      },
+      "hash": "0x63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75",
+      "payload": {
+        "answer": "Gas is cheap (0.410 gwei); I posted an alert."
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 10,
+        "at": 1791930713533,
+        "type": "checkpoint",
+        "summary": "Entries 0-9 stamped by the notary and published on Claus",
+        "payloadHash": "0x44eacaf548d471ac2c84221719d82e73280e84e50f95eadefb47a991ac0b50da",
+        "prev": "0x63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75"
+      },
+      "hash": "0x078d65a854bffac333919eb402183c1d2ad344053688ab047aceb51064f19950",
+      "payload": {
+        "orderId": "sha256:d7d93d35f32486a4a803571c97b274708a7b4ac153c9e84ff60ccc91f3ed9c99",
+        "url": "http://127.0.0.1:44945/v1/public/service-results/sha256%3Ad7d93d35f32486a4a803571c97b274708a7b4ac153c9e84ff60ccc91f3ed9c99",
+        "root": "0xdfab2594eca8e7304864cf6ffa0628d6b59142f6ee4573e7fbe2c5b1b84e1a7e",
+        "head": "0x63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75",
+        "toSeq": 9
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 11,
+        "at": 1791930713534,
+        "type": "note",
+        "summary": "task (scripted): check gas and alert if it is cheap",
+        "payloadHash": "0x54ec1e866d65e7a1ea5331352f9baa1a13f453030e27933efc14baf0f82f7266",
+        "prev": "0x078d65a854bffac333919eb402183c1d2ad344053688ab047aceb51064f19950"
+      },
+      "hash": "0x56d32b2de876078cd34e67b00db9ac81c1e93b5182664598aafb22c47a29ae39",
+      "payload": {
+        "task": "check gas",
+        "model": null
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 12,
+        "at": 1791930713535,
+        "type": "action",
+        "tool": "get_gas_price",
+        "summary": "gas price is 2.900 gwei",
+        "payloadHash": "0x1c0c547e8f22c07d8ecc25c5a0cc1377ddf7f528dfbcda0781f71c2e6710e0ed",
+        "prev": "0x56d32b2de876078cd34e67b00db9ac81c1e93b5182664598aafb22c47a29ae39"
+      },
+      "hash": "0x0c5ea376b021f09f35ff9e91c8758d98de045aae3146aedf7162bcc4e4fb8c87"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 13,
+        "at": 1791930713535,
+        "type": "action",
+        "tool": "get_latest_block",
+        "summary": "block 21004913, base fee 2.900 gwei",
+        "payloadHash": "0x82fc0065c849e7f3d87de4a202cd0eb79d7482b2b56fef09852fc6952ceb5fcd",
+        "prev": "0x0c5ea376b021f09f35ff9e91c8758d98de045aae3146aedf7162bcc4e4fb8c87"
+      },
+      "hash": "0x6809fd9b9776614159c606d046ce53dae7528320e782138ae309d7c0c9df7816"
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 14,
+        "at": 1791930713536,
+        "type": "note",
+        "summary": "answer: Gas is 2.900 gwei; nothing to report.",
+        "payloadHash": "0xf7d2e4b8d393c819c0eff4ae4e0ca6e478021b6783cc0b7f1ff6137530d109bd",
+        "prev": "0x6809fd9b9776614159c606d046ce53dae7528320e782138ae309d7c0c9df7816"
+      },
+      "hash": "0xc5070f89dd16d29185efb41ccd26b6b6ec09457ff50551573012561f12c95734",
+      "payload": {
+        "answer": "Gas is 2.900 gwei; nothing to report."
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 15,
+        "at": 1791930713546,
+        "type": "revocation",
+        "summary": "Mandate revoked by the operator: demo finished: access no longer needed",
+        "payloadHash": "0xabc434624b4f4571154a0dfc7bdb96af5c521ecec7a1fc91ac007d3026dd4269",
+        "prev": "0xc5070f89dd16d29185efb41ccd26b6b6ec09457ff50551573012561f12c95734"
+      },
+      "hash": "0xe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e",
+      "payload": {
+        "mandateId": "mnd_154e60b4-1d68-4b4d-b0c1-5c1eac45e20e",
+        "revokedAt": 1791930713542,
+        "reason": "demo finished: access no longer needed",
+        "agentCredentialNowReturns": "scope_denied"
+      }
+    },
+    {
+      "entry": {
+        "v": 1,
+        "agent": "gas-watcher",
+        "seq": 16,
+        "at": 1791930713609,
+        "type": "checkpoint",
+        "summary": "Entries 10-15 stamped by the notary and published on Claus",
+        "payloadHash": "0x9b561f0b5226f7831db6699acb32f7335129ea81509f1af81d551bf0644651ec",
+        "prev": "0xe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e"
+      },
+      "hash": "0x3a038eda948685753f003ac5cc907f0069d8b177b1aba38e6a66ca54fb98df6e",
+      "payload": {
+        "orderId": "sha256:3978b5c8ef0157dcf3f23c77210ac5663ea3460472b0eb8fad3fa68ce69b83ae",
+        "url": "http://127.0.0.1:44945/v1/public/service-results/sha256%3A3978b5c8ef0157dcf3f23c77210ac5663ea3460472b0eb8fad3fa68ce69b83ae",
+        "root": "0xa1b83ebab7a20a6fe31ab2c9d7a10d5d4c9c535e866b3d3a6bd82e2edc2339af",
+        "head": "0xe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e",
+        "toSeq": 15
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "orderId": "sha256:d7d93d35f32486a4a803571c97b274708a7b4ac153c9e84ff60ccc91f3ed9c99",
+      "url": "http://127.0.0.1:44945/v1/public/service-results/sha256%3Ad7d93d35f32486a4a803571c97b274708a7b4ac153c9e84ff60ccc91f3ed9c99",
+      "fromSeq": 0,
+      "toSeq": 9,
+      "root": "0xdfab2594eca8e7304864cf6ffa0628d6b59142f6ee4573e7fbe2c5b1b84e1a7e",
+      "head": "0x63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75",
+      "notarizedAt": 1791930713511,
+      "outputHash": "sha256:549a4cb0494645bf05ecc00a4844f99fdadca422a315fe2f384802c71ef9a5bb",
+      "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009dfab2594eca8e7304864cf6ffa0628d6b59142f6ee4573e7fbe2c5b1b84e1a7e63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75000000000000000000000000000000000000000000000000000000006aceb159",
+      "publicCopy": {
+        "id": "sha256:d7d93d35f32486a4a803571c97b274708a7b4ac153c9e84ff60ccc91f3ed9c99",
+        "projectId": "prj_133cf3f9-332b-4fa9-a72d-79a05d121f09",
+        "providerProjectId": "prj_ac65ba97-b669-4718-93d7-902eebd7b473",
+        "serviceId": "sha256:6649b794cc29394e200586109a3c7aa519822caae9c55332f8647b16ee95e829",
+        "manifestHash": "sha256:178cc8d5b50bcb15270a70a5cde2ebcf3fb77309dd58427e943163e930f6a35d",
+        "outputHash": "sha256:549a4cb0494645bf05ecc00a4844f99fdadca422a315fe2f384802c71ef9a5bb",
+        "dataPolicy": "public-data-v1",
+        "dataPolicyHash": "sha256:e72720e19155ba6087ccc517decd2d5b504d5c474d7c7caa9b50e3fad490b980",
+        "sourceResults": [],
+        "depth": 1,
+        "revision": 1,
+        "deliveredAt": 1791930713514,
+        "publishedAt": 1791930713530,
+        "expiresAt": 1794436249386,
+        "output": {
+          "agent": "gas-watcher",
+          "capability": "blackbox.checkpoint.v1",
+          "count": 10,
+          "from": 1791930713487,
+          "fromSeq": 0,
+          "head": "0x63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75",
+          "notarizedAt": 1791930713511,
+          "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009dfab2594eca8e7304864cf6ffa0628d6b59142f6ee4573e7fbe2c5b1b84e1a7e63d3c96ec6efcaf96305a8afcec69c2744b9f963e2414bd4e2ff9ce8be86fc75000000000000000000000000000000000000000000000000000000006aceb159",
+          "probe": false,
+          "root": "0xdfab2594eca8e7304864cf6ffa0628d6b59142f6ee4573e7fbe2c5b1b84e1a7e",
+          "to": 1791930713494,
+          "toSeq": 9,
+          "v": 1
+        }
+      }
+    },
+    {
+      "orderId": "sha256:3978b5c8ef0157dcf3f23c77210ac5663ea3460472b0eb8fad3fa68ce69b83ae",
+      "url": "http://127.0.0.1:44945/v1/public/service-results/sha256%3A3978b5c8ef0157dcf3f23c77210ac5663ea3460472b0eb8fad3fa68ce69b83ae",
+      "fromSeq": 10,
+      "toSeq": 15,
+      "root": "0xa1b83ebab7a20a6fe31ab2c9d7a10d5d4c9c535e866b3d3a6bd82e2edc2339af",
+      "head": "0xe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e",
+      "notarizedAt": 1791930713575,
+      "outputHash": "sha256:32798fad0e770819b1a44ce8565a3094f7c2e0032e8ac5b5bb9436a26e18cbce",
+      "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b2000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000fa1b83ebab7a20a6fe31ab2c9d7a10d5d4c9c535e866b3d3a6bd82e2edc2339afe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e000000000000000000000000000000000000000000000000000000006aceb159",
+      "publicCopy": {
+        "id": "sha256:3978b5c8ef0157dcf3f23c77210ac5663ea3460472b0eb8fad3fa68ce69b83ae",
+        "projectId": "prj_133cf3f9-332b-4fa9-a72d-79a05d121f09",
+        "providerProjectId": "prj_ac65ba97-b669-4718-93d7-902eebd7b473",
+        "serviceId": "sha256:6649b794cc29394e200586109a3c7aa519822caae9c55332f8647b16ee95e829",
+        "manifestHash": "sha256:178cc8d5b50bcb15270a70a5cde2ebcf3fb77309dd58427e943163e930f6a35d",
+        "outputHash": "sha256:32798fad0e770819b1a44ce8565a3094f7c2e0032e8ac5b5bb9436a26e18cbce",
+        "dataPolicy": "public-data-v1",
+        "dataPolicyHash": "sha256:e72720e19155ba6087ccc517decd2d5b504d5c474d7c7caa9b50e3fad490b980",
+        "sourceResults": [],
+        "depth": 1,
+        "revision": 1,
+        "deliveredAt": 1791930713580,
+        "publishedAt": 1791930713607,
+        "expiresAt": 1794436249386,
+        "output": {
+          "agent": "gas-watcher",
+          "capability": "blackbox.checkpoint.v1",
+          "count": 6,
+          "from": 1791930713533,
+          "fromSeq": 10,
+          "head": "0xe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e",
+          "notarizedAt": 1791930713575,
+          "onchainData": "0xb4be44d590cd50f30e32418d3cc102017015b7f7fd5b9c81fba4848972cc90b2000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000fa1b83ebab7a20a6fe31ab2c9d7a10d5d4c9c535e866b3d3a6bd82e2edc2339afe8dd7a99e516b44493bb79a09189896b98fa703a8ed6fc23d8e68da975eadd2e000000000000000000000000000000000000000000000000000000006aceb159",
+          "probe": false,
+          "root": "0xa1b83ebab7a20a6fe31ab2c9d7a10d5d4c9c535e866b3d3a6bd82e2edc2339af",
+          "to": 1791930713546,
+          "toSeq": 15,
+          "v": 1
+        }
+      }
+    }
+  ],
+  "note": "Sample generated on a private local Claus network; public result links point at that local host."
+}
