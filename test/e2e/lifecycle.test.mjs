@@ -48,12 +48,19 @@ test('setup → actions → checkpoint → revoke → verify on a local Claus ne
   assert.equal(onchain.agentKey, agentKey('gas-watcher'));
   assert.equal(onchain.toSeq, 2);
 
+  // Nothing new since that stamp: a second checkpoint is skipped, not wasted.
+  const skipped = await checkpoint(ctx);
+  assert.equal(skipped.skipped, true);
+  assert.equal(ctx.state.checkpoints.length, 1);
+
   // 4. More work, then the operator revokes the mandate.
   await gas({});
   const r = await revoke(ctx, { reason: 'test finished' });
   assert.ok(['unauthenticated', 'scope_denied', 'not_found', 'credential_revoked', 'mandate_revoked'].includes(r.denied) || r.denied, 'agent denied after revocation');
-  // A revoked agent can no longer order checkpoints itself.
-  await assert.rejects(checkpoint(ctx, { as: 'agent' }));
+  // A revoked agent can no longer use Claus at all, so it cannot order stamps itself.
+  const revokedAgent = createClaus({ origin: claus.origin, token: ctx.state.agent.token });
+  await assert.rejects(revokedAgent.call('service_quote', { projectId: ctx.state.agent.projectId,
+    serviceId: ctx.state.notary.serviceId, input: {}, idempotencyKey: 'after-revoke' }));
 
   // 5. Everything verifies, and every checkpoint matches its public Claus copy.
   const lines = await readLog(ctx.logFile);

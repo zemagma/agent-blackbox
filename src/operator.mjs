@@ -154,6 +154,11 @@ export async function checkpoint(ctx, { as = 'agent', runNotary = true, timeoutM
   const client = as === 'owner' ? (await owner(ctx, 'operator')).client : createClaus({ origin: s.origin, token: s.agent.token });
   const lines = await readLog(ctx.logFile);
   const fromSeq = s.checkpoints.length ? s.checkpoints[s.checkpoints.length - 1].toSeq + 1 : 0;
+  // Only the note about the previous stamp is new: nothing worth stamping yet.
+  // (That note is included automatically in the next real checkpoint.)
+  if (lines.slice(fromSeq).every((l) => l.entry.type === 'checkpoint')) {
+    return { skipped: true, reason: 'nothing new since the last checkpoint', lastCheckpoint: s.checkpoints.at(-1) ?? null };
+  }
   const cp = buildCheckpoint(lines, { fromSeq });
   const key = `${s.tag}:cp:${cp.fromSeq}-${cp.toSeq}`;
   const projectId = s.agent.projectId;
