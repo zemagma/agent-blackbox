@@ -10,6 +10,7 @@ import { openState, setup, checkpoint, revoke, verify, exportBundle } from '../.
 import { openBlackbox, readLog, verifyLog } from '../../src/log.mjs';
 import { decodeOnchain, agentKey } from '../../src/checkpoint.mjs';
 import { createClaus } from '../../src/claus.mjs';
+import { mandateChecker } from '../../agent/wallet.mjs';
 
 const ready = process.env.CLAUS_SOURCE && Number(process.versions.node.split('.')[0]) >= 24;
 
@@ -53,6 +54,9 @@ test('setup → actions → checkpoint → revoke → verify on a local Claus ne
   assert.equal(skipped.skipped, true);
   assert.equal(ctx.state.checkpoints.length, 1);
 
+  // The wallet agent's gate asks Claus before signing: open while the mandate is active...
+  await mandateChecker(ctx.state)();
+
   // 4. More work, then the operator revokes the mandate.
   await gas({});
   const r = await revoke(ctx, { reason: 'test finished' });
@@ -61,6 +65,9 @@ test('setup → actions → checkpoint → revoke → verify on a local Claus ne
   const revokedAgent = createClaus({ origin: claus.origin, token: ctx.state.agent.token });
   await assert.rejects(revokedAgent.call('service_quote', { projectId: ctx.state.agent.projectId,
     serviceId: ctx.state.notary.serviceId, input: {}, idempotencyKey: 'after-revoke' }));
+
+  // ...and closed by Claus itself afterwards, even ignoring the local revoked flag.
+  await assert.rejects(mandateChecker({ ...ctx.state, revokedAt: undefined })(), /Claus denied the agent's credential/);
 
   // 5. Everything verifies, and every checkpoint matches its public Claus copy.
   const lines = await readLog(ctx.logFile);

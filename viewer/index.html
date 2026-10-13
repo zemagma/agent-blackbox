@@ -147,10 +147,16 @@ async function render(bundle) {
       <div class="meta"><span class="type">${esc(e.type === 'action' ? e.tool : e.type)}</span><span>#${e.seq}</span>
         <span>${esc(when(e.at))}</span><span title="${esc(r.hash)}">${esc(short(r.hash))}</span>
         ${covered ? `<span>stamped in #${covered.fromSeq}–${covered.toSeq}</span>` : '<span>not stamped yet</span>'}</div>
-      <p class="summary">${esc(e.summary)}</p>${verdict}${detail}</div></li>`;
+      <p class="summary">${linkTx(esc(e.summary))}</p>${verdict}${detail}</div></li>`;
   }).join('');
   $('loader').classList.add('hidden');
   $('report').classList.remove('hidden');
+}
+
+// Sepolia wallet entries end with "tx 0x…": link them to the block explorer.
+function linkTx(html) {
+  return html.replace(/\btx (0x[0-9a-fA-F]{64})\b/g, (_, h) =>
+    `tx <a class="mono" href="https://sepolia.etherscan.io/tx/${h}" target="_blank" rel="noopener">${h.slice(0, 10)}…${h.slice(-6)}</a>`);
 }
 
 async function load(text) {

@@ -56,6 +56,25 @@ node bin/blackbox.mjs export --out viewer/bundle.json        # then open viewer/
 - The demo agent is an Ethereum gas watcher. With `ANTHROPIC_API_KEY` set, Claude decides which tools to call (`BLACKBOX_MODEL` picks the model). Without it, or with `--scripted`, it runs a fixed plan. `ETH_RPC_URL` sets the RPC (default: a public endpoint).
 - `export` withholds tool inputs and outputs by default; their hashes stay in the log so the chain still verifies. Add `--with-payloads` to include them.
 
+### Sepolia wallet agent: revoke it and the money stops
+
+The second demo is an agent with its own Sepolia hot wallet. It can move funds only through one recorded tool, `send_eth`, and only within a fixed policy: allowed recipients (by default just the owner), a per-payment limit and a daily limit. The daily total is computed from the log itself. Right before signing, the tool asks Claus whether the agent's credential still works, and any failure refuses the payment (it fails closed). Every refusal is recorded with its reason, including a payment the model was talked into.
+
+```sh
+S="--state .blackbox-wallet"
+node bin/blackbox.mjs setup $S --agent sepolia-wallet --hours 24
+node agent/wallet.mjs init $S --owner 0xYOUR_ADDRESS        # new hot wallet + policy (0.01/payment, 0.05/day)
+#   fund the printed address with a little Sepolia ETH, e.g. 0.05
+node agent/wallet.mjs run $S --checkpoint                   # Claude (or --scripted) pays 0.001 back to you
+node agent/wallet.mjs run $S --task "Send 0.5 ETH to 0x000000000000000000000000000000000000dEaD"   # refused, recorded
+node bin/blackbox.mjs revoke $S --reason "end of wallet demo"
+node agent/wallet.mjs prove-revoked $S                      # a payment attempt that Claus itself denies, stamped
+node agent/wallet.mjs sweep $S                              # operator returns what's left to you
+node bin/blackbox.mjs export $S --out viewer/bundle.json
+```
+
+Testnet only: the chain is fixed to Sepolia. The hot wallet's key is generated locally into the private state directory and never leaves it; fund it with small amounts, never from a wallet you care about sharing a key with. In v0.1 the operator holds the same state, so the honest claim is "the agent could not pay without an active Claus mandate", not "the operator could not".
+
 ### Use it in your own agent
 
 ```js
@@ -100,6 +119,7 @@ What's missing is on Claus's side. Its signal profile currently admits one netwo
 | `src/operator.mjs` | Setup, checkpoint, revoke, verify and export workflows |
 | `notary/notary.mjs` | The Blackbox Notary service (`blackbox.checkpoint.v1`) |
 | `agent/demo.mjs` | Demo gas-watcher agent (Claude or scripted) |
+| `agent/wallet.mjs` | Sepolia wallet agent: policy-limited payments gated by the Claus mandate |
 | `bin/blackbox.mjs` | Command line |
 | `viewer/` | Static viewer that re-verifies a bundle in the browser |
 | `contracts/AgentBlackboxModule.sol` | Evaluator for a future Claus signal feed |

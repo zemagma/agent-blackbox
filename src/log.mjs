@@ -102,7 +102,7 @@ export async function openBlackbox({ file, agent, now = () => Date.now() }) {
     get head() { return lines.length ? lines[lines.length - 1].hash : null; },
     append,
     /** Wraps an async tool so every call (and failure) is recorded. */
-    wrapTool(name, fn, { summarize } = {}) {
+    wrapTool(name, fn, { summarize, summarizeError } = {}) {
       return async (input) => {
         try {
           const output = await fn(input);
@@ -111,7 +111,7 @@ export async function openBlackbox({ file, agent, now = () => Date.now() }) {
           return output;
         } catch (err) {
           await append({ type: 'action', tool: name, payload: { input: input ?? null, ok: false, error: String(err?.message ?? err) },
-            summary: name + ' failed' });
+            summary: summarizeError ? summarizeError(input, err) : name + ' failed' });
           throw err;
         }
       };

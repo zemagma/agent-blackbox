@@ -1,5 +1,5 @@
 node_modules/
-.blackbox/
+.blackbox*/
 blackbox-bundle.json
 *.sqlite
 .env

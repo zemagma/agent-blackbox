@@ -65,7 +65,7 @@ export function createTools({ rpc = RPC, fetchImpl = globalThis.fetch, alertsFil
 /** Wraps every tool with the blackbox recorder. */
 export function recordedTools(box, tools) {
   return Object.fromEntries(Object.entries(tools).map(([name, t]) =>
-    [name, { ...t, run: box.wrapTool(name, t.run, { summarize: t.summarize }) }]));
+    [name, { ...t, run: box.wrapTool(name, t.run, { summarize: t.summarize, summarizeError: t.summarizeError }) }]));
 }
 
 export async function runScripted(tools) {
@@ -76,12 +76,14 @@ export async function runScripted(tools) {
   return cheap ? `Gas is cheap (${gas.gwei} gwei); I posted an alert.` : `Gas is ${gas.gwei} gwei; nothing to report.`;
 }
 
-export async function runClaude(tools, task, { client, model = MODEL, maxTurns = 8 } = {}) {
+const GAS_SYSTEM = 'You are a careful Ethereum gas watcher. Use the tools to answer. Every tool call you make is recorded in a public, tamper-evident log, so act deliberately.';
+
+export async function runClaude(tools, task, { client, model = MODEL, maxTurns = 8, system = GAS_SYSTEM } = {}) {
   const messages = [{ role: 'user', content: task }];
   const toolDefs = Object.entries(tools).map(([name, t]) => ({ name, description: t.description, input_schema: t.schema }));
   for (let turn = 0; turn < maxTurns; turn++) {
     const res = await client.messages.create({ model, max_tokens: 1024, tools: toolDefs, messages,
-      system: 'You are a careful Ethereum gas watcher. Use the tools to answer. Every tool call you make is recorded in a public, tamper-evident log, so act deliberately.' });
+      system });
     messages.push({ role: 'assistant', content: res.content });
     const uses = res.content.filter((b) => b.type === 'tool_use');
     if (res.stop_reason !== 'tool_use' || uses.length === 0) {
