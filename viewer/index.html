@@ -103,6 +103,8 @@ async function render(bundle) {
 
   $('title').textContent = bundle.agent;
   $('lede').textContent = `${lines.length} recorded entries, ${cps.length} stamped checkpoint${cps.length === 1 ? '' : 's'}. Exported ${when(bundle.exportedAt)}.`;
+  // Bundles made by dev/make-sample.mjs carry a note: say clearly it is not a live record.
+  if (bundle.note) $('lede').textContent += ' ' + bundle.note;
   $('status').innerHTML = allOk
     ? '<span class="status ok">✓ Record intact: every entry and checkpoint verifies</span>'
     : '<span class="status bad">✗ Record changed: see the entries marked below</span>';
