@@ -4,8 +4,12 @@
   "description": "A flight recorder for AI agents: scoped, revocable permissions and a tamper-evident public action log, built on Claus Network.",
   "type": "module",
   "license": "MIT",
-  "engines": { "node": ">=20.10" },
-  "bin": { "blackbox": "bin/blackbox.mjs" },
+  "engines": {
+    "node": ">=20.10"
+  },
+  "bin": {
+    "blackbox": "bin/blackbox.mjs"
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "test:e2e": "node --test test/e2e/*.test.mjs",
@@ -22,5 +26,8 @@
     "solc": "0.8.27",
     "@ethereumjs/evm": "^10.1.1",
     "@ethereumjs/util": "^10.1.1"
+  },
+  "overrides": {
+    "tmp": "0.2.7"
   }
 }
