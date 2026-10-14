@@ -79,6 +79,8 @@
 
   /* The limit of the proof, shown as plainly as the result. */
   .boundary { margin-top: 10px; border: 2px dashed var(--ink); border-radius: 14px; padding: 12px 16px; background: var(--panel); }
+  .checkit { border-style: solid; border-width: 1px; border-color: var(--line); }
+  .checkit ol { margin: 6px 0 0; padding-left: 20px; } .checkit li { margin: 4px 0; }
   .boundary b { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); display: block; margin-bottom: 4px; }
 
   /* Key moments in the timeline. */
@@ -105,6 +107,7 @@
   <div id="status"><span class="status checking">Checking the record…</span></div>
   <div id="story" class="story hidden"></div>
   <div id="boundary" class="boundary hidden"></div>
+  <div id="checkit" class="boundary checkit hidden"></div>
 
   <section id="loader" class="loader hidden">
     <p><strong>Drop a <span class="mono">blackbox-bundle.json</span> here</strong>, or</p>
@@ -198,6 +201,20 @@ async function render(bundle) {
     : 'Revoking the mandate cancels the agent\'s Claus credential, so it can no longer use Claus. It does not lock anything on-chain, '
       + 'and the record only proves the log was not changed after each stamp, not that the agent logged everything it did.'}`;
   $('boundary').classList.remove('hidden');
+
+  // On-chain facts anyone can check on a block explorer, without trusting this page.
+  const txOf = (l) => /\btx (0x[0-9a-fA-F]{64})\b/.exec(l?.entry.summary ?? '')?.[1];
+  const deployNote = lines.find((l) => l.entry.type === 'note' && /^GrantWallet /.test(l.entry.summary));
+  const contract = deployNote?.payload?.contract;
+  const explorer = 'https://sepolia.etherscan.io';
+  const items = [];
+  if (/^0x[0-9a-fA-F]{40}$/.test(contract ?? '')) items.push(`<li>The wallet contract: <a href="${explorer}/address/${contract}" target="_blank" rel="noopener" class="mono">${short(contract)}</a>. Its code and its <span class="mono">revoked(grantId)</span> state are public.</li>`);
+  if (txOf(onchainRevoke)) items.push(`<li>The owner's on-chain revoke: <a href="${explorer}/tx/${txOf(onchainRevoke)}" target="_blank" rel="noopener" class="mono">${short(txOf(onchainRevoke))}</a>, which should show <strong>Success</strong> and a <span class="mono">GrantRevoked</span> event.</li>`);
+  if (txOf(directRefusal)) items.push(`<li>The agent's own key paying after the revoke: <a href="${explorer}/tx/${txOf(directRefusal)}" target="_blank" rel="noopener" class="mono">${short(txOf(directRefusal))}</a>, which should show <strong>Fail</strong> with <span class="mono">GrantIsRevoked</span> (error code <span class="mono">0x1864d4d0</span>).</li>`);
+  if (items.length) {
+    $('checkit').innerHTML = `<b>Check it yourself on Sepolia</b>You don't have to trust this page. These are on-chain:<ol>${items.join('')}</ol>`;
+    $('checkit').classList.remove('hidden');
+  }
   const publicLinks = cps.filter((c) => c.url).map((c) => `<a href="${esc(c.url)}" target="_blank" rel="noopener">#${c.fromSeq}–${c.toSeq}</a>`).join(' · ');
   $('cards').innerHTML = `
     <div class="card"><h3>Permission</h3>
@@ -273,6 +290,7 @@ function showLoader(message = '') {
   $('status').innerHTML = message;
   $('story').classList.add('hidden');
   $('boundary').classList.add('hidden');
+  $('checkit').classList.add('hidden');
   $('loader').classList.remove('hidden');
 }
 
