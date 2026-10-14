@@ -32,8 +32,8 @@ test('publish-site: viewer + record as a Claus static release, republish retires
   };
   assert.match(await file(first.releaseId, 'index.html'), /<script src="bundle.js"><\/script>/);
   const js = await file(first.releaseId, 'bundle.js');
-  assert.ok(js.startsWith('window.BLACKBOX_BUNDLE = '));
-  assert.equal(JSON.parse(js.slice('window.BLACKBOX_BUNDLE = '.length, -2)).agent, bundle.agent);
+  assert.ok(js.includes('window.BLACKBOX_BUNDLE = '));
+  assert.equal(JSON.parse(js.slice(js.indexOf('window.BLACKBOX_BUNDLE = ') + 'window.BLACKBOX_BUNDLE = '.length, -2)).agent, bundle.agent);
   const manifest = JSON.parse(await file(first.releaseId, 'claus.json'));
   assert.equal(manifest.name, 'Agent Blackbox');
   assert.equal(manifest.connect, undefined, 'local http origin is not a valid connect source');

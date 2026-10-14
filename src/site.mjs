@@ -27,7 +27,7 @@ export async function siteFiles({ bundle, apiOrigin = DEFAULT_ORIGIN, name = 'Ag
   const files = [
     { path: 'index.html', content: await text('viewer/index.html') },
     { path: 'verify.js', content: await text('viewer/verify.js') },
-    { path: 'bundle.js', content: 'window.BLACKBOX_BUNDLE = ' + JSON.stringify(bundle) + ';\n' },
+    { path: 'bundle.js', content: "window.BLACKBOX_HOST = 'claus';\nwindow.BLACKBOX_BUNDLE = " + JSON.stringify(bundle) + ';\n' },
     { path: 'claus.json', content: JSON.stringify(manifest, null, 2) + '\n' },
     { path: 'logo.svg', content: await text('site/logo.svg') },
     { path: 'preview.svg', content: await text('site/preview.svg') },

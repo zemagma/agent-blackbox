@@ -58,6 +58,38 @@
   .loader.drag { border-color: var(--orange); background: var(--orange-soft); }
   button, .button { font: 600 15px Inter, sans-serif; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; cursor: pointer; background: var(--ink); color: #fff; }
   .hidden { display: none; }
+
+  /* Verdict strip: black, like the Claus footer, so the outcome reads first. */
+  .strip { margin-top: 22px; background: var(--ink); color: #f4f1ea; border-radius: 18px; padding: 16px 20px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+  .strip .verdict-main { font: 700 20px 'Space Grotesk', system-ui, sans-serif; }
+  .strip.ok .mark { color: #6fdc9a; } .strip.bad .mark { color: #ff8a7a; }
+  .strip .verdict-sub { color: #c9c2b4; font-size: 14px; }
+  .strip .pill { margin-left: auto; font-weight: 600; font-size: 14px; padding: 5px 12px; border-radius: 999px; }
+  .pill.revoked { background: var(--orange); color: #fff; }
+  .pill.active { background: #2b5b3c; color: #dcf3e4; }
+  .pill.expired { background: #3a352d; color: #e9e3d6; }
+
+  /* The story in four steps. */
+  .story { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .step b { display: block; font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--sub); margin-bottom: 4px; }
+  .step.hit { background: var(--ink); color: #f4f1ea; border-color: var(--ink); }
+  .step.hit b { color: var(--orange); }
+
+  /* Key moments in the timeline. */
+  .badge { display: inline-block; margin-bottom: 6px; font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 6px; background: var(--orange); color: #fff; }
+  .item.revocation .badge { background: var(--bad); }
+  .item.key::before { width: 18px; height: 18px; left: -10px; border-color: var(--orange); background: var(--ink); }
+  .item.key .entry { background: var(--ink); border: 2px solid var(--orange); color: #f4f1ea; }
+  .item.key .meta, .item.key .muted { color: #c9c2b4; }
+  .item.key .type { color: #fff; }
+
+  /* Inside the Claus frame, which already shows the project name and its own header. */
+  body.on-claus main { padding-top: 18px; }
+  body.on-claus .eyebrow { display: none; }
+  body.on-claus h1 { font-size: clamp(30px, 5vw, 44px); margin-top: 0; }
   footer { margin-top: 48px; color: var(--sub); font-size: 14px; }
 </style>
 </head>
@@ -67,6 +99,7 @@
   <h1 id="title">What did this agent do?</h1>
   <p class="lede" id="lede">Open a blackbox bundle to see what an AI agent was allowed to do, every action it took, and whether the record has been changed. Everything is re-checked in your browser.</p>
   <div id="status"><span class="status checking">Checking the record…</span></div>
+  <div id="story" class="story hidden"></div>
 
   <section id="loader" class="loader hidden">
     <p><strong>Drop a <span class="mono">blackbox-bundle.json</span> here</strong>, or</p>
@@ -112,13 +145,33 @@ async function render(bundle) {
   $('lede').textContent = `${lines.length} recorded entries, ${cps.length} stamped checkpoint${cps.length === 1 ? '' : 's'}. Exported ${when(bundle.exportedAt)}.`;
   // Bundles made by dev/make-sample.mjs carry a note: say clearly it is not a live record.
   if (bundle.note) $('lede').textContent += ' ' + bundle.note;
-  $('status').innerHTML = allOk
-    ? '<span class="status ok">✓ Record intact: every entry and checkpoint verifies</span>'
-    : '<span class="status bad">✗ Record changed: see the entries marked below</span>';
-
   const m = bundle.mandate;
   const state = m.revokedAt ? 'revoked' : m.expiresAt < Date.now() ? 'expired' : 'active';
   const stateText = m.revokedAt ? 'Revoked ' + when(m.revokedAt) : state === 'expired' ? 'Expired ' + when(m.expiresAt) : 'Active until ' + when(m.expiresAt);
+  const liveCount = cps.filter((c) => c.source === 'live').length;
+  const checkedHow = liveCount ? `${liveCount} of ${cps.length} stamps checked live on Claus` : `${cps.length} stamps checked against saved Claus copies`;
+  $('status').innerHTML = `<div class="strip ${allOk ? 'ok' : 'bad'}">
+      <span class="verdict-main"><span class="mark">${allOk ? '✓' : '✗'}</span> ${allOk ? 'Record intact' : 'Record changed'}</span>
+      <span class="verdict-sub">${allOk ? `${lines.length} entries, nothing edited · ${esc(checkedHow)}` : 'Some entries no longer match their stamps: see below'}</span>
+      <span class="pill ${state}">${esc(stateText)}</span></div>`;
+
+  // The story: what it was allowed, what it did, when it was stopped, what happened after.
+  const revSeq = lines.find((l) => l.entry.type === 'revocation')?.entry.seq ?? Infinity;
+  const isAfter = (l) => l.entry.type === 'action' && l.entry.seq > revSeq;
+  const blocked = (l) => /refused|denied|failed/i.test(l.entry.summary);
+  const actions = lines.filter((l) => l.entry.type === 'action' && l.entry.seq < revSeq);
+  const paid = actions.filter((l) => /^sent /.test(l.entry.summary)).length;
+  const refused = actions.filter(blocked).length;
+  const after = lines.filter(isAfter);
+  const afterBlocked = after.filter(blocked).length;
+  $('story').innerHTML = `
+    <div class="step"><b>1 · Allowed</b>${m.scopes.length} Claus scopes, until ${esc(when(m.expiresAt))}</div>
+    <div class="step"><b>2 · Acted</b>${actions.length} recorded actions${paid ? `, ${paid} payment${paid === 1 ? '' : 's'} sent` : ''}${refused ? `, ${refused} refused` : ''}</div>
+    <div class="step${m.revokedAt ? ' hit' : ''}"><b>3 · Stopped</b>${m.revokedAt ? 'Mandate revoked ' + esc(when(m.revokedAt)) : 'Not revoked (yet)'}</div>
+    <div class="step${after.length ? ' hit' : ''}"><b>4 · After the revoke</b>${!m.revokedAt ? '—' : after.length
+      ? `${after.length} attempt${after.length === 1 ? '' : 's'}, ${afterBlocked === after.length ? 'all blocked by Claus' : afterBlocked + ' blocked'}`
+      : 'No further actions'}</div>`;
+  $('story').classList.remove('hidden');
   const publicLinks = cps.filter((c) => c.url).map((c) => `<a href="${esc(c.url)}" target="_blank" rel="noopener">#${c.fromSeq}–${c.toSeq}</a>`).join(' · ');
   $('cards').innerHTML = `
     <div class="card"><h3>Permission</h3>
@@ -150,10 +203,13 @@ async function render(bundle) {
         : `<div class="verdict bad">✗ ${esc(cp.result.why)}</div>`;
     }
     if (!r.ok) verdict += `<div class="verdict bad">✗ ${esc(r.problems.join('; '))}</div>`;
+    const key = isAfter(line);
+    const badge = e.type === 'revocation' ? '<span class="badge">Mandate revoked</span>'
+      : key ? `<span class="badge">${blocked(line) ? 'After the revoke · blocked' : 'After the revoke'}</span>` : '';
     const detail = line.payload !== undefined
       ? `<details><summary>Details</summary><pre>${esc(JSON.stringify(line.payload, null, 2))}</pre></details>`
       : (e.type === 'action' ? '<div class="muted">Inputs and outputs withheld; committed by hash.</div>' : '');
-    return `<li class="item ${esc(e.type)} ${r.ok ? '' : 'problem'}"><div class="entry">
+    return `<li class="item ${esc(e.type)} ${key ? 'key' : ''} ${r.ok ? '' : 'problem'}"><div class="entry">${badge}
       <div class="meta"><span class="type">${esc(e.type === 'action' ? e.tool : e.type)}</span><span>#${e.seq}</span>
         <span>${esc(when(e.at))}</span><span title="${esc(r.hash)}">${esc(short(r.hash))}</span>
         ${covered ? `<span>stamped in #${covered.fromSeq}–${covered.toSeq}</span>` : '<span>not stamped yet</span>'}</div>
@@ -187,6 +243,7 @@ async function fetchLive(cp, origin) {
 // No record to show: offer the drop box instead.
 function showLoader(message = '') {
   $('status').innerHTML = message;
+  $('story').classList.add('hidden');
   $('loader').classList.remove('hidden');
 }
 
@@ -204,6 +261,7 @@ drop.addEventListener('drop', async (e) => { e.preventDefault(); drop.classList.
 
 const param = new URLSearchParams(location.search).get('bundle');
 // On the Claus network the page may not fetch its own files, so the bundle ships as bundle.js.
+if (window.BLACKBOX_HOST === 'claus') document.body.classList.add('on-claus');
 if (window.BLACKBOX_BUNDLE && !param) {
   load(JSON.stringify(window.BLACKBOX_BUNDLE));
 } else if (param || location.protocol !== 'file:') {
