@@ -77,6 +77,10 @@
   .step.hit { background: var(--ink); color: #f4f1ea; border-color: var(--ink); }
   .step.hit b { color: var(--orange); }
 
+  /* The limit of the proof, shown as plainly as the result. */
+  .boundary { margin-top: 10px; border: 2px dashed var(--ink); border-radius: 14px; padding: 12px 16px; background: var(--panel); }
+  .boundary b { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); display: block; margin-bottom: 4px; }
+
   /* Key moments in the timeline. */
   .badge { display: inline-block; margin-bottom: 6px; font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase;
     padding: 3px 9px; border-radius: 6px; background: var(--orange); color: #fff; }
@@ -100,6 +104,7 @@
   <p class="lede" id="lede">Open a blackbox bundle to see what an AI agent was allowed to do, every action it took, and whether the record has been changed. Everything is re-checked in your browser.</p>
   <div id="status"><span class="status checking">Checking the record…</span></div>
   <div id="story" class="story hidden"></div>
+  <div id="boundary" class="boundary hidden"></div>
 
   <section id="loader" class="loader hidden">
     <p><strong>Drop a <span class="mono">blackbox-bundle.json</span> here</strong>, or</p>
@@ -172,6 +177,16 @@ async function render(bundle) {
       ? `${after.length} attempt${after.length === 1 ? '' : 's'}, ${afterBlocked === after.length ? 'all blocked by Claus' : afterBlocked + ' blocked'}`
       : 'No further actions'}</div>`;
   $('story').classList.remove('hidden');
+
+  // What revocation does and does not prove (thanks to @contractclaus for asking for this).
+  const wallet = lines.some((l) => l.entry.tool === 'send_eth');
+  $('boundary').innerHTML = `<b>What this proves, and what it doesn't</b>${wallet
+    ? 'Revoking the mandate cancels the agent\'s Claus credential, and the payment tool checks that credential before every signature, so the agent stopped. '
+      + 'It is <strong>not an on-chain lock on the wallet</strong>: the wallet\'s key still exists, and anything holding it outside this tool could still send. '
+      + 'That is why the remaining funds were swept back to the owner after the revoke.'
+    : 'Revoking the mandate cancels the agent\'s Claus credential, so it can no longer use Claus. It does not lock anything on-chain, '
+      + 'and the record only proves the log was not changed after each stamp, not that the agent logged everything it did.'}`;
+  $('boundary').classList.remove('hidden');
   const publicLinks = cps.filter((c) => c.url).map((c) => `<a href="${esc(c.url)}" target="_blank" rel="noopener">#${c.fromSeq}–${c.toSeq}</a>`).join(' · ');
   $('cards').innerHTML = `
     <div class="card"><h3>Permission</h3>
@@ -244,6 +259,7 @@ async function fetchLive(cp, origin) {
 function showLoader(message = '') {
   $('status').innerHTML = message;
   $('story').classList.add('hidden');
+  $('boundary').classList.add('hidden');
   $('loader').classList.remove('hidden');
 }
 

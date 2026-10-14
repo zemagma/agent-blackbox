@@ -108,6 +108,7 @@ CLAUS_SOURCE=../claus-network node dev/make-sample.mjs # regenerates viewer/bund
 
 - **It proves** that the log was not changed after each checkpoint was stamped, when each stamp happened according to Claus, which scopes and expiry the agent held, and that its credential stopped working when it was revoked.
 - **It does not prove** that the agent logged everything it did. An operator who controls the agent can skip recording. The recorder makes omissions visible only between checkpoints that someone else is watching. Pair it with actions that can only happen through recorded tools, such as a wallet that only the wrapped tool can sign with.
+- **Revocation is not an on-chain lock.** Revoking the mandate cancels the agent's Claus credential, and the wallet tool checks that credential before every signature, so the agent stops. The wallet's key still exists, though: anything holding it outside the tool could still send, which is why the demo sweeps the funds back after the revoke. An on-chain lock would need a contract wallet that enforces the mandate itself.
 - **The notary is not independent yet.** In v0.1 the operator runs both projects. The stamp still carries Claus's own timestamps and provenance, but a notary run by someone else, or several, is stronger. The service is public, so anyone can run one.
 - **Public Claus results expire.** Claus keeps a published result for at most 30 days (the life of a service version). Keep exported bundles. On-chain records are the long-term answer.
 
