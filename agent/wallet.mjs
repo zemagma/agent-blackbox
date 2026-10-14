@@ -61,6 +61,8 @@ const refuse = (why) => Object.assign(new Error('refused: ' + why), { refused: t
  * asks Claus whether the agent's credential still works; both are injected so the
  * policy logic can be tested without a network.
  */
+export const refused = refuse;
+
 export function createWalletTools({ address, policy, chain, checkMandate, spent }) {
   const allowed = new Set(policy.allow.map((a) => a.toLowerCase()));
   return {
@@ -95,7 +97,7 @@ export function createWalletTools({ address, policy, chain, checkMandate, spent 
         const why = String(reason ?? '').trim();
         if (!why || why.length > 140) throw refuse('a reason of 1-140 characters is required');
         await checkMandate();                       // asks Claus right before signing
-        const hash = await chain.send({ to: dest, value });
+        const hash = await chain.send({ to: dest, value, reason: why });
         const receipt = await chain.waitReceipt(hash);
         return { hash, to: dest, valueWei: value.toString(), amountEth: eth(value), reason: why,
           status: receipt?.status ?? 'pending', blockNumber: receipt?.blockNumber ?? null, explorer: explorerTx(hash) };
@@ -123,7 +125,7 @@ export async function runScriptedWallet(tools, owner) {
   return `Sent 0.001 ETH back to the owner (${sent.status}): ${sent.explorer}`;
 }
 
-function sepoliaChain(privateKey, rpc = RPC) {
+export function sepoliaChain(privateKey, rpc = RPC) {
   const account = privateKeyToAccount(privateKey);
   const pub = createPublicClient({ chain: sepolia, transport: http(rpc) });
   const wallet = createWalletClient({ account, chain: sepolia, transport: http(rpc) });
@@ -131,7 +133,7 @@ function sepoliaChain(privateKey, rpc = RPC) {
   return {
     pub, wallet, account,
     balance: (address) => pub.getBalance({ address }),
-    send: ({ to, value, ...fees }) => wallet.sendTransaction({ to, value, ...fees }),
+    send: ({ to, value, reason: _reason, ...fees }) => wallet.sendTransaction({ to, value, ...fees }),
     waitReceipt: async (hash) => { try { return toReceipt(await pub.waitForTransactionReceipt({ hash, timeout: 90000 })); } catch { return null; } },
     receipt: async (hash) => { try { return toReceipt(await pub.getTransactionReceipt({ hash })); } catch { return null; } },
   };

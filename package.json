@@ -14,7 +14,8 @@
     "test": "node --test test/*.test.mjs",
     "test:e2e": "node --test test/e2e/*.test.mjs",
     "local-claus": "node dev/claus-local.mjs",
-    "demo": "node agent/demo.mjs"
+    "demo": "node agent/demo.mjs",
+    "compile": "node dev/compile.mjs"
   },
   "dependencies": {
     "viem": "^2.57.1"

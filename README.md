@@ -74,6 +74,24 @@ node bin/blackbox.mjs export --state .blackbox-wallet --out viewer/bundle.json
 
 Testnet only: the chain is fixed to Sepolia. The hot wallet's key is generated locally into the private state directory and never leaves it; fund it with small amounts, never from a wallet you care about sharing a key with. In v0.1 the operator holds the same state, so the honest claim is "the agent could not pay without an active Claus mandate", not "the operator could not".
 
+### On-chain kill switch: GrantWallet
+
+The hot-wallet demo above stops the agent by revoking its Claus credential, which the payment tool checks before signing. That is not an on-chain lock. `agent/grant-wallet.mjs` adds one, following the Claus signal-grant pattern ([docs](https://claus.si/docs/signals)): the funds live in a `GrantWallet` contract (`contracts/GrantWallet.sol`), the owner signs a finite, expiring EIP-712 spending grant for the agent's key (one recipient, per-payment and daily limits), the contract checks it on every payment, and `revoke` revokes the grant **on-chain** as well as the Claus mandate. After that, even a direct contract call with the agent's own key, skipping every check in our code, is refused by the chain (`GrantIsRevoked`). The agent's key only holds gas money; the owner can always withdraw.
+
+```sh
+node bin/blackbox.mjs setup --state .blackbox-grant --agent grant-wallet --hours 24
+node agent/grant-wallet.mjs init   --state .blackbox-grant --owner 0xYOUR_ADDRESS
+#   send ~0.07 Sepolia ETH to the printed owner key (0.05 funds the contract, the rest is gas)
+node agent/grant-wallet.mjs deploy --state .blackbox-grant
+node agent/grant-wallet.mjs run    --state .blackbox-grant --checkpoint
+node agent/grant-wallet.mjs revoke --state .blackbox-grant --reason "end of demo"
+node agent/grant-wallet.mjs prove-revoked --state .blackbox-grant   # Claus denies the tool; the chain refuses a direct call
+node agent/grant-wallet.mjs sweep  --state .blackbox-grant          # contract and leftover gas back to you
+node bin/blackbox.mjs export --state .blackbox-grant --out viewer/bundle.json
+```
+
+In this mode the operator key is also the contract owner, so it holds a little Sepolia ETH for gas. The contract is unaudited test code: testnet only. `node dev/compile.mjs` rebuilds `contracts/build/GrantWallet.json`; the tests check it matches the source.
+
 ### Publish the record on the Claus network map
 
 ```sh
@@ -108,7 +126,7 @@ CLAUS_SOURCE=../claus-network node dev/make-sample.mjs # regenerates viewer/bund
 
 - **It proves** that the log was not changed after each checkpoint was stamped, when each stamp happened according to Claus, which scopes and expiry the agent held, and that its credential stopped working when it was revoked.
 - **It does not prove** that the agent logged everything it did. An operator who controls the agent can skip recording. The recorder makes omissions visible only between checkpoints that someone else is watching. Pair it with actions that can only happen through recorded tools, such as a wallet that only the wrapped tool can sign with.
-- **Revocation is not an on-chain lock.** Revoking the mandate cancels the agent's Claus credential, and the wallet tool checks that credential before every signature, so the agent stops. The wallet's key still exists, though: anything holding it outside the tool could still send, which is why the demo sweeps the funds back after the revoke. An on-chain lock would need a contract wallet that enforces the mandate itself.
+- **In the hot-wallet demo, revocation is not an on-chain lock.** Revoking the mandate cancels the agent's Claus credential, and the wallet tool checks that credential before every signature, so the agent stops. The wallet's key still exists, though: anything holding it outside the tool could still send, which is why that demo sweeps the funds back. The GrantWallet mode closes this gap with an on-chain grant revocation (see above); its owner key can still sign new grants.
 - **The notary is not independent yet.** In v0.1 the operator runs both projects. The stamp still carries Claus's own timestamps and provenance, but a notary run by someone else, or several, is stronger. The service is public, so anyone can run one.
 - **Public Claus results expire.** Claus keeps a published result for at most 30 days (the life of a service version). Keep exported bundles. On-chain records are the long-term answer.
 
@@ -133,6 +151,7 @@ What's missing is on Claus's side. Its signal profile currently admits one netwo
 | `viewer/` | Static viewer that re-verifies a bundle in the browser (live against Claus where allowed) |
 | `src/site.mjs`, `site/` | Publishes the viewer and a record as a website on the Claus network map |
 | `contracts/AgentBlackboxModule.sol` | Evaluator for a future Claus signal feed |
+| `contracts/GrantWallet.sol`, `src/grant.mjs`, `agent/grant-wallet.mjs` | On-chain kill switch: owner-signed, revocable spending grants |
 | `dev/claus-local.mjs` | Private local Claus network for development and tests |
 
 ## Tests

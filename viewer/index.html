@@ -164,6 +164,9 @@ async function render(bundle) {
   const revSeq = lines.find((l) => l.entry.type === 'revocation')?.entry.seq ?? Infinity;
   const isAfter = (l) => l.entry.type === 'action' && l.entry.seq > revSeq;
   const blocked = (l) => /refused|denied|failed/i.test(l.entry.summary);
+  // GrantWallet records: the money sits in a contract and the grant is revoked on-chain.
+  const onchainRevoke = lines.find((l) => l.entry.type === 'note' && /revoked the spending grant on-chain/.test(l.entry.summary));
+  const directRefusal = lines.find((l) => l.entry.tool === 'pay_direct' && /refused on-chain/.test(l.entry.summary));
   const actions = lines.filter((l) => l.entry.type === 'action' && l.entry.seq < revSeq);
   const paid = actions.filter((l) => /^sent /.test(l.entry.summary)).length;
   const refused = actions.filter(blocked).length;
@@ -172,15 +175,23 @@ async function render(bundle) {
   $('story').innerHTML = `
     <div class="step"><b>1 · Allowed</b>${m.scopes.length} Claus scopes, until ${esc(when(m.expiresAt))}</div>
     <div class="step"><b>2 · Acted</b>${actions.length} recorded actions${paid ? `, ${paid} payment${paid === 1 ? '' : 's'} sent` : ''}${refused ? `, ${refused} refused` : ''}</div>
-    <div class="step${m.revokedAt ? ' hit' : ''}"><b>3 · Stopped</b>${m.revokedAt ? 'Mandate revoked ' + esc(when(m.revokedAt)) : 'Not revoked (yet)'}</div>
+    <div class="step${m.revokedAt ? ' hit' : ''}"><b>3 · Stopped</b>${m.revokedAt
+      ? (onchainRevoke ? 'Grant revoked on-chain and Claus mandate revoked ' : 'Mandate revoked ') + esc(when(m.revokedAt)) : 'Not revoked (yet)'}</div>
     <div class="step${after.length ? ' hit' : ''}"><b>4 · After the revoke</b>${!m.revokedAt ? '—' : after.length
-      ? `${after.length} attempt${after.length === 1 ? '' : 's'}, ${afterBlocked === after.length ? 'all blocked by Claus' : afterBlocked + ' blocked'}`
+      ? `${after.length} attempt${after.length === 1 ? '' : 's'}, ${afterBlocked === after.length
+          ? (directRefusal ? 'all blocked: by Claus, and by the chain itself' : 'all blocked by Claus') : afterBlocked + ' blocked'}`
       : 'No further actions'}</div>`;
   $('story').classList.remove('hidden');
 
   // What revocation does and does not prove (thanks to @contractclaus for asking for this).
   const wallet = lines.some((l) => l.entry.tool === 'send_eth');
-  $('boundary').innerHTML = `<b>What this proves, and what it doesn't</b>${wallet
+  $('boundary').innerHTML = `<b>What this proves, and what it doesn't</b>${onchainRevoke
+    ? 'The funds sat in a GrantWallet contract that only pays under an owner-signed grant. Revoking cancelled the agent\'s Claus credential '
+      + '<strong>and revoked the grant on-chain</strong>: '
+      + (directRefusal ? 'a direct call to the contract with the agent\'s own key, skipping every check in our code, was refused by the chain itself. '
+        : 'after that, the contract refuses any payment under it, whoever sends it. ')
+      + 'Still true: the owner key could sign a new grant, the contract is unaudited test code, and the record proves the log was not changed after each stamp, not that the agent logged everything.'
+    : wallet
     ? 'Revoking the mandate cancels the agent\'s Claus credential, and the payment tool checks that credential before every signature, so the agent stopped. '
       + 'It is <strong>not an on-chain lock on the wallet</strong>: the wallet\'s key still exists, and anything holding it outside this tool could still send. '
       + 'That is why the remaining funds were swept back to the owner after the revoke.'
@@ -220,7 +231,9 @@ async function render(bundle) {
     if (!r.ok) verdict += `<div class="verdict bad">✗ ${esc(r.problems.join('; '))}</div>`;
     const key = isAfter(line);
     const badge = e.type === 'revocation' ? '<span class="badge">Mandate revoked</span>'
-      : key ? `<span class="badge">${blocked(line) ? 'After the revoke · blocked' : 'After the revoke'}</span>` : '';
+      : key ? `<span class="badge">${e.tool === 'pay_direct' && blocked(line) ? 'After the revoke · refused on-chain'
+        : blocked(line) ? 'After the revoke · blocked' : 'After the revoke'}</span>`
+      : onchainRevoke === line ? '<span class="badge">Grant revoked on-chain</span>' : '';
     const detail = line.payload !== undefined
       ? `<details><summary>Details</summary><pre>${esc(JSON.stringify(line.payload, null, 2))}</pre></details>`
       : (e.type === 'action' ? '<div class="muted">Inputs and outputs withheld; committed by hash.</div>' : '');
