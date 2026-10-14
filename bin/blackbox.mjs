@@ -8,12 +8,15 @@
 //   blackbox verify     [--state DIR]
 //   blackbox export     [--state DIR] [--out FILE] [--with-payloads]
 //   blackbox status     [--state DIR]
+//   blackbox publish-site [--state DIR] [--bundle FILE] [--slug NAME]   viewer + record on the Claus network map
 //
 // The state directory (default ./.blackbox) holds private keys and tokens.
 // Keep it private; it is created with mode 700.
 import { writeFile } from 'node:fs/promises';
 import { openState, setup, checkpoint, revoke, verify, exportBundle, notaryTick } from '../src/operator.mjs';
 import { readLog } from '../src/log.mjs';
+import { publishSite } from '../src/site.mjs';
+import { readFile } from 'node:fs/promises';
 
 const [command = 'help', ...rest] = process.argv.slice(2);
 const args = {};
@@ -38,9 +41,10 @@ async function main() {
   verify       check the log chain and every checkpoint against its public copy
   export       write the public bundle for viewer/index.html
   status       show projects, mandate and checkpoints
+  publish-site publish the viewer and the exported record on the Claus network map
 
 Options: --state DIR (default .blackbox), --agent NAME, --hours N, --reason TEXT,
-         --out FILE, --with-payloads. Set CLAUS_NETWORK_URL to use another Claus host.`);
+         --out FILE, --with-payloads, --bundle FILE (default viewer/bundle.json), --slug NAME. Set CLAUS_NETWORK_URL to use another Claus host.`);
     return;
   }
   const ctx = await openState(stateDir);
@@ -77,6 +81,11 @@ Options: --state DIR (default .blackbox), --agent NAME, --hours N, --reason TEXT
         notary: s.notary && { ...s.notary, token: undefined }, revokedAt: s.revokedAt ?? null,
         entries: (await readLog(ctx.logFile)).length, checkpoints: s.checkpoints });
       break;
+    case 'publish-site': {
+      const bundle = JSON.parse(await readFile(args.bundle ?? 'viewer/bundle.json', 'utf8'));
+      print(await publishSite(ctx, { bundle, slug: args.slug ?? 'agent-blackbox', log }));
+      break;
+    }
     default:
       throw new Error('unknown command: ' + command + ' (try help)');
   }

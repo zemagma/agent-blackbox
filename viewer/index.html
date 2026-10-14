@@ -81,6 +81,7 @@
 
   <footer>Agent Blackbox · hashes are SHA-256 over canonical JSON; checkpoints are Merkle roots stamped by a notary service on <a href="https://claus.si/docs">Claus Network</a>. A valid record proves the log was not changed after it was stamped, not that the agent behaved well.</footer>
 </main>
+<script src="bundle.js"></script>
 <script type="module">
 import { verifyLines, checkCheckpoint } from './verify.js';
 
@@ -95,9 +96,12 @@ async function render(bundle) {
   const chain = await verifyLines(lines);
   const cps = [];
   for (const cp of bundle.checkpoints) {
-    const stamped = cp.publicCopy?.output ?? null;
+    // Prefer the stamp as Claus publishes it right now; fall back to the copy saved at export.
+    const live = await fetchLive(cp, bundle.origin);
+    const stamped = live?.output ?? cp.publicCopy?.output ?? null;
+    const source = live ? 'live' : stamped ? 'saved' : 'none';
     const target = stamped ?? { fromSeq: cp.fromSeq, toSeq: cp.toSeq, count: cp.toSeq - cp.fromSeq + 1, root: cp.root, head: cp.head };
-    cps.push({ ...cp, stamped, result: await checkCheckpoint(lines, target) });
+    cps.push({ ...cp, stamped, source, result: await checkCheckpoint(lines, target) });
   }
   const allOk = chain.ok && cps.every((c) => c.result.ok);
 
@@ -136,7 +140,10 @@ async function render(bundle) {
     if (e.type === 'checkpoint') {
       const cp = cps.find((c) => c.orderId === byCheckpointSeq.get(i));
       if (cp) verdict = cp.result.ok
-        ? `<div class="verdict ok">✓ Entries ${cp.fromSeq}–${cp.toSeq} match the notary's stamp${cp.stamped ? ' (public copy on Claus, notarized ' + esc(when(cp.stamped.notarizedAt)) + ')' : ' (saved copy; the public one has expired)'}</div>`
+        ? `<div class="verdict ok">✓ Entries ${cp.fromSeq}–${cp.toSeq} match the notary's stamp${{
+            live: ' (checked live on Claus just now; notarized ' + esc(when(cp.stamped?.notarizedAt)) + ')',
+            saved: ' (Claus copy saved at export; notarized ' + esc(when(cp.stamped?.notarizedAt)) + ')',
+            none: ' (no Claus copy available)' }[cp.source]}</div>`
         : `<div class="verdict bad">✗ ${esc(cp.result.why)}</div>`;
     }
     if (!r.ok) verdict += `<div class="verdict bad">✗ ${esc(r.problems.join('; '))}</div>`;
@@ -159,6 +166,21 @@ function linkTx(html) {
     `tx <a class="mono" href="https://sepolia.etherscan.io/tx/${h}" target="_blank" rel="noopener">${h.slice(0, 10)}…${h.slice(-6)}</a>`);
 }
 
+// Reads a checkpoint's public result straight from the official Claus API. The origin is
+// fixed here, never taken from the bundle, so a forged bundle cannot point the check at a
+// server of its choosing. Any failure falls back quietly to the copy saved at export.
+const CLAUS_API = 'https://claus-network-api.vercel.app';
+async function fetchLive(cp, origin) {
+  try {
+    if (origin !== CLAUS_API || !/^sha256:[0-9a-f]{64}$/.test(cp.orderId ?? '')) return null;
+    const res = await fetch(CLAUS_API + '/v1/public/service-results/' + encodeURIComponent(cp.orderId),
+      { redirect: 'error', signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body && typeof body.output === 'object' ? body : null;
+  } catch { return null; }
+}
+
 async function load(text) {
   try { await render(JSON.parse(text)); }
   catch (err) { $('status').innerHTML = `<span class="status bad">${esc(err.message)}</span>`; }
@@ -171,7 +193,10 @@ drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
 drop.addEventListener('drop', async (e) => { e.preventDefault(); drop.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) load(await f.text()); });
 
 const param = new URLSearchParams(location.search).get('bundle');
-if (param || location.protocol !== 'file:') {
+// On the Claus network the page may not fetch its own files, so the bundle ships as bundle.js.
+if (window.BLACKBOX_BUNDLE && !param) {
+  load(JSON.stringify(window.BLACKBOX_BUNDLE));
+} else if (param || location.protocol !== 'file:') {
   fetch(param ?? 'bundle.json').then((r) => (r.ok ? r.text() : null)).then((t) => t && load(t)).catch(() => {});
 }
 </script>

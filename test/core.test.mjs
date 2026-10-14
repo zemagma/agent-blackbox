@@ -111,3 +111,17 @@ test('the notary stamps well-formed checkpoints and refuses malformed ones', asy
   assert.throws(() => stamp({ ...cp, root: 'nothex' }, { now: cp.to }));
   assert.throws(() => stamp({ ...cp, to: cp.to + 10 * 60000 }, { now: cp.to }), 'future checkpoints are refused');
 });
+
+test('site files: bundle as a script, claus.json lets the page reach the Claus API only', async () => {
+  const { siteFiles } = await import('../src/site.mjs');
+  const { readFile } = await import('node:fs/promises');
+  const bundle = JSON.parse(await readFile(new URL('../viewer/bundle.json', import.meta.url), 'utf8'));
+  const files = await siteFiles({ bundle });
+  const manifest = JSON.parse(files.find((f) => f.path === 'claus.json').content);
+  assert.deepEqual(manifest.connect, ['https://claus-network-api.vercel.app']);
+  assert.equal(manifest.schema, 'claus-project/1');
+  assert.ok(manifest.description.length <= 500 && manifest.name.length <= 80);
+  const raw = files.map((f) => f.content).join('\n');
+  for (const secret of ['privateKey', '"token"', 'sk-ant']) assert.equal(raw.includes(secret), false, secret);
+  await assert.rejects(siteFiles({ bundle: { format: 'other' } }), /not an agent-blackbox bundle/);
+});

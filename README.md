@@ -74,6 +74,15 @@ node bin/blackbox.mjs export --state .blackbox-wallet --out viewer/bundle.json
 
 Testnet only: the chain is fixed to Sepolia. The hot wallet's key is generated locally into the private state directory and never leaves it; fund it with small amounts, never from a wallet you care about sharing a key with. In v0.1 the operator holds the same state, so the honest claim is "the agent could not pay without an active Claus mandate", not "the operator could not".
 
+### Publish the record on the Claus network map
+
+```sh
+node bin/blackbox.mjs export --state .blackbox-wallet --out viewer/bundle.json
+node bin/blackbox.mjs publish-site --state .blackbox-wallet        # → https://claus.si/c/agent-blackbox
+```
+
+This uploads the viewer and the record as a static Claus website (no gas, no expiry) and publishes the project, so it appears on the [network map](https://claus.si). Claus hosts sites in a sandbox that may not fetch files, so the record ships as `bundle.js`; `claus.json` allows the page to reach the Claus API only, so every stamp is re-checked live on Claus. Run it again after a new export: a new release replaces the old one, which is retired.
+
 ### Use it in your own agent
 
 ```js
@@ -120,7 +129,8 @@ What's missing is on Claus's side. Its signal profile currently admits one netwo
 | `agent/demo.mjs` | Demo gas-watcher agent (Claude or scripted) |
 | `agent/wallet.mjs` | Sepolia wallet agent: policy-limited payments gated by the Claus mandate |
 | `bin/blackbox.mjs` | Command line |
-| `viewer/` | Static viewer that re-verifies a bundle in the browser |
+| `viewer/` | Static viewer that re-verifies a bundle in the browser (live against Claus where allowed) |
+| `src/site.mjs`, `site/` | Publishes the viewer and a record as a website on the Claus network map |
 | `contracts/AgentBlackboxModule.sol` | Evaluator for a future Claus signal feed |
 | `dev/claus-local.mjs` | Private local Claus network for development and tests |
 

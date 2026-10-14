@@ -58,7 +58,7 @@ export async function openState(dir, { origin } = {}) {
   return { directory, state, save, step, logFile: join(directory, 'blackbox.jsonl') };
 }
 
-async function owner(ctx, role) {
+export async function owner(ctx, role) {
   const s = ctx.state;
   s.keys ??= {};
   s.keys[role] ??= generatePrivateKey();
@@ -73,7 +73,7 @@ async function owner(ctx, role) {
   return { account, client: createClaus({ origin: s.origin, token: s.sessions[role].token }) };
 }
 
-async function publishProfile(client, projectId, description) {
+export async function publishProfile(client, projectId, description) {
   const project = await client.call('project_get', { projectId });
   if (project.publication?.published) return;
   try {
