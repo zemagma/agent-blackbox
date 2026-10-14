@@ -11,7 +11,7 @@
   <text x="80" y="414" font-family="system-ui, sans-serif" font-size="64" font-weight="700" fill="#17140f">The money stops.</text>
   <text x="80" y="476" font-family="system-ui, sans-serif" font-size="28" fill="#5d574c">Every agent action in a tamper-evident log, stamped on Claus.</text>
   <g transform="translate(80 520)">
-    <rect width="372" height="54" rx="27" fill="#dcf3e4"/>
+    <rect width="410" height="54" rx="27" fill="#dcf3e4"/>
     <text x="28" y="35" font-family="system-ui, sans-serif" font-size="24" font-weight="600" fill="#11743b">✓ Record intact · checked live</text>
   </g>
 </svg>
