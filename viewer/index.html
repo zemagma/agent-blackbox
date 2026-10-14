@@ -22,6 +22,7 @@
   .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 10px 16px; border-radius: 999px; font-weight: 600; }
   .status.ok { background: var(--ok-soft); color: var(--ok); }
   .status.bad { background: var(--bad-soft); color: var(--bad); }
+  .status.checking { background: var(--panel); color: var(--sub); border: 1px solid var(--line); }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 28px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
   .card h3 { margin: 0 0 10px; font: 500 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
@@ -65,9 +66,9 @@
   <div class="eyebrow">Agent Blackbox · flight recorder</div>
   <h1 id="title">What did this agent do?</h1>
   <p class="lede" id="lede">Open a blackbox bundle to see what an AI agent was allowed to do, every action it took, and whether the record has been changed. Everything is re-checked in your browser.</p>
-  <div id="status"></div>
+  <div id="status"><span class="status checking">Checking the record…</span></div>
 
-  <section id="loader" class="loader">
+  <section id="loader" class="loader hidden">
     <p><strong>Drop a <span class="mono">blackbox-bundle.json</span> here</strong>, or</p>
     <p><input type="file" id="file" accept="application/json,.json"></p>
     <p class="muted">Made with <span class="mono">node bin/blackbox.mjs export</span>. Nothing is uploaded; the file is read on this page.</p>
@@ -95,9 +96,11 @@ async function render(bundle) {
   const lines = bundle.lines;
   const chain = await verifyLines(lines);
   const cps = [];
-  for (const cp of bundle.checkpoints) {
-    // Prefer the stamp as Claus publishes it right now; fall back to the copy saved at export.
-    const live = await fetchLive(cp, bundle.origin);
+  // Prefer each stamp as Claus publishes it right now (all fetched at once);
+  // fall back to the copy saved at export.
+  const lives = await Promise.all(bundle.checkpoints.map((cp) => fetchLive(cp, bundle.origin)));
+  for (const [i, cp] of bundle.checkpoints.entries()) {
+    const live = lives[i];
     const stamped = live?.output ?? cp.publicCopy?.output ?? null;
     const source = live ? 'live' : stamped ? 'saved' : 'none';
     const target = stamped ?? { fromSeq: cp.fromSeq, toSeq: cp.toSeq, count: cp.toSeq - cp.fromSeq + 1, root: cp.root, head: cp.head };
@@ -181,9 +184,16 @@ async function fetchLive(cp, origin) {
   } catch { return null; }
 }
 
+// No record to show: offer the drop box instead.
+function showLoader(message = '') {
+  $('status').innerHTML = message;
+  $('loader').classList.remove('hidden');
+}
+
 async function load(text) {
+  $('status').innerHTML = '<span class="status checking">Checking the record…</span>';
   try { await render(JSON.parse(text)); }
-  catch (err) { $('status').innerHTML = `<span class="status bad">${esc(err.message)}</span>`; }
+  catch (err) { showLoader(`<span class="status bad">${esc(err.message)}</span>`); }
 }
 
 $('file').addEventListener('change', async (e) => { const f = e.target.files[0]; if (f) load(await f.text()); });
@@ -197,7 +207,10 @@ const param = new URLSearchParams(location.search).get('bundle');
 if (window.BLACKBOX_BUNDLE && !param) {
   load(JSON.stringify(window.BLACKBOX_BUNDLE));
 } else if (param || location.protocol !== 'file:') {
-  fetch(param ?? 'bundle.json').then((r) => (r.ok ? r.text() : null)).then((t) => t && load(t)).catch(() => {});
+  fetch(param ?? 'bundle.json').then((r) => (r.ok ? r.text() : null))
+    .then((t) => (t ? load(t) : showLoader())).catch(() => showLoader());
+} else {
+  showLoader();
 }
 </script>
 </body>
